@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulado — Semana 2 | DatavenIA</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Serif:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink:      #1a1a2e;
+    --paper:    #f7f5f0;
+    --rule:     #d4cfc4;
+    --accent:   #1a4f8a;
+    --green:    #1a6b3c;
+    --red:      #c0392b;
+    --yellow:   #f5c842;
+    --mid:      #6b6b6b;
+    --white:    #ffffff;
+  }
+
+  html { font-size: 16px; scroll-behavior: smooth; }
+  body { font-family: 'IBM Plex Sans', sans-serif; background: var(--paper); color: var(--ink); min-height: 100vh; }
+
+  header {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 2.5rem 2rem 2rem;
+    border-bottom: 4px solid var(--yellow);
+  }
+  .header-inner { max-width: 760px; margin: 0 auto; }
+  .eyebrow { font-family: 'IBM Plex Mono', monospace; font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; color: var(--yellow); margin-bottom: .6rem; }
+  header h1 { font-family: 'IBM Plex Serif', serif; font-size: clamp(1.7rem, 4vw, 2.4rem); font-weight: 600; line-height: 1.2; margin-bottom: .7rem; }
+  .header-meta { font-family: 'IBM Plex Mono', monospace; font-size: .75rem; color: var(--rule); display: flex; flex-wrap: wrap; gap: .5rem 1.5rem; }
+
+  #progress-wrap { position: sticky; top: 0; z-index: 100; background: var(--ink); padding: .6rem 2rem; display: flex; align-items: center; gap: 1rem; }
+  #progress-label { font-family: 'IBM Plex Mono', monospace; font-size: .72rem; color: var(--paper); white-space: nowrap; min-width: 6rem; }
+  #progress-bar-bg { flex: 1; height: 4px; background: rgba(255,255,255,.2); border-radius: 2px; overflow: hidden; }
+  #progress-bar-fill { height: 100%; background: var(--yellow); width: 0%; transition: width .4s ease; border-radius: 2px; }
+
+  main { max-width: 760px; margin: 0 auto; padding: 2rem 2rem 4rem; }
+
+  .card { background: var(--white); border: 1px solid var(--rule); border-radius: 8px; margin-bottom: 1.5rem; overflow: hidden; display: none; }
+  .card.active { display: block; }
+
+  .card-head { display: flex; align-items: center; gap: .75rem; padding: 1rem 1.25rem .75rem; border-bottom: 1px solid var(--rule); background: #fafaf8; }
+  .q-number { font-family: 'IBM Plex Mono', monospace; font-size: .7rem; font-weight: 600; color: var(--accent); background: #e8f0fb; padding: .2rem .55rem; border-radius: 3px; white-space: nowrap; }
+  .materia-tag { font-family: 'IBM Plex Mono', monospace; font-size: .65rem; letter-spacing: .06em; text-transform: uppercase; color: var(--mid); padding: .15rem .5rem; border: 1px solid var(--rule); border-radius: 3px; }
+
+  .card-body { padding: 1.5rem 1.25rem; }
+  .affirmation { font-family: 'IBM Plex Serif', serif; font-size: 1.08rem; line-height: 1.7; color: var(--ink); margin-bottom: 1.5rem; border-left: 3px solid var(--rule); padding-left: 1rem; }
+
+  .btn-row { display: flex; gap: .75rem; flex-wrap: wrap; }
+  .btn { font-family: 'IBM Plex Sans', sans-serif; font-size: .88rem; font-weight: 600; padding: .65rem 1.4rem; border: 2px solid; border-radius: 5px; cursor: pointer; transition: background .18s, color .18s, transform .1s; flex: 1; min-width: 120px; text-align: center; }
+  .btn:active { transform: scale(.97); }
+  .btn-true { border-color: var(--green); color: var(--green); background: transparent; }
+  .btn-true:hover { background: var(--green); color: var(--white); }
+  .btn-true.selected { background: var(--green); color: var(--white); }
+  .btn-false { border-color: var(--red); color: var(--red); background: transparent; }
+  .btn-false:hover { background: var(--red); color: var(--white); }
+  .btn-false.selected { background: var(--red); color: var(--white); }
+  .btn:disabled { opacity: .6; cursor: default; }
+  .btn-nav { border-color: var(--accent); color: var(--accent); background: transparent; margin-top: 1rem; width: 100%; }
+  .btn-nav:hover { background: var(--accent); color: var(--white); }
+
+  .feedback { display: none; margin-top: 1.2rem; padding: 1rem 1.1rem; border-radius: 6px; font-size: .9rem; line-height: 1.6; }
+  .feedback.correct { display: block; background: #f0faf4; border: 1px solid #a3d9b5; color: #1a6b3c; }
+  .feedback.wrong { display: block; background: #fff5f5; border: 1px solid #f5b8b3; color: #c0392b; }
+  .feedback-icon { font-size: 1.1rem; margin-right: .35rem; }
+  .feedback-verdict { font-weight: 700; margin-bottom: .4rem; }
+  .feedback-tese { font-family: 'IBM Plex Serif', serif; font-size: .9rem; color: var(--ink); margin-top: .7rem; padding-top: .7rem; border-top: 1px solid var(--rule); line-height: 1.65; }
+  .feedback-fonte { font-family: 'IBM Plex Mono', monospace; font-size: .68rem; color: var(--mid); margin-top: .5rem; }
+
+  #score-screen { display: none; text-align: center; padding: 3rem 2rem; }
+  #score-screen.active { display: block; }
+  .score-circle { width: 130px; height: 130px; border-radius: 50%; background: var(--ink); color: var(--yellow); font-family: 'IBM Plex Mono', monospace; font-size: 2.4rem; font-weight: 600; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; }
+  .score-title { font-family: 'IBM Plex Serif', serif; font-size: 1.6rem; margin-bottom: .5rem; }
+  .score-sub { font-size: .9rem; color: var(--mid); margin-bottom: 2rem; }
+
+  #gabarito { display: none; max-width: 760px; margin: 0 auto; padding: 0 2rem 4rem; }
+  #gabarito.active { display: block; }
+  .gab-title { font-family: 'IBM Plex Serif', serif; font-size: 1.3rem; font-weight: 600; margin-bottom: 1.2rem; padding-top: 1rem; border-top: 2px solid var(--ink); }
+  .gab-item { background: var(--white); border: 1px solid var(--rule); border-radius: 7px; margin-bottom: 1rem; overflow: hidden; }
+  .gab-head { display: flex; align-items: center; gap: .6rem; padding: .75rem 1rem; background: #fafaf8; border-bottom: 1px solid var(--rule); flex-wrap: wrap; }
+  .gab-num { font-family: 'IBM Plex Mono', monospace; font-size: .7rem; font-weight: 600; color: var(--accent); background: #e8f0fb; padding: .15rem .45rem; border-radius: 3px; }
+  .gab-status { font-family: 'IBM Plex Mono', monospace; font-size: .68rem; font-weight: 600; padding: .15rem .5rem; border-radius: 3px; text-transform: uppercase; }
+  .gab-status.acerto { background: #d4f1df; color: var(--green); }
+  .gab-status.erro { background: #fde8e6; color: var(--red); }
+  .gab-status.skip { background: #eee; color: var(--mid); }
+  .gab-body { padding: 1rem 1rem 1.1rem; }
+  .gab-afirmacao { font-family: 'IBM Plex Serif', serif; font-size: .92rem; line-height: 1.6; color: var(--ink); border-left: 3px solid var(--rule); padding-left: .8rem; margin-bottom: .8rem; }
+  .gab-resp-label { font-family: 'IBM Plex Mono', monospace; font-size: .68rem; text-transform: uppercase; color: var(--mid); letter-spacing: .07em; margin-bottom: .3rem; }
+  .gab-resp { font-size: .9rem; line-height: 1.6; color: var(--ink); margin-bottom: .5rem; }
+  .gab-fonte { font-family: 'IBM Plex Mono', monospace; font-size: .67rem; color: var(--mid); }
+
+  #intro { text-align: center; padding: 2.5rem 1rem; border: 1px solid var(--rule); background: var(--white); border-radius: 8px; margin-bottom: 1.5rem; }
+  #intro h2 { font-family: 'IBM Plex Serif', serif; font-size: 1.3rem; margin-bottom: .7rem; }
+  #intro p { font-size: .92rem; color: var(--mid); max-width: 480px; margin: 0 auto 1.5rem; line-height: 1.6; }
+  .btn-start { font-family: 'IBM Plex Sans', sans-serif; font-size: 1rem; font-weight: 600; padding: .8rem 2.4rem; background: var(--ink); color: var(--yellow); border: none; border-radius: 6px; cursor: pointer; transition: opacity .2s; }
+  .btn-start:hover { opacity: .85; }
+  .btn-gabarito { display: inline-block; margin-top: 1rem; font-family: 'IBM Plex Sans', sans-serif; font-size: .9rem; font-weight: 600; padding: .7rem 2rem; background: var(--accent); color: var(--white); border: none; border-radius: 6px; cursor: pointer; }
+  .btn-reiniciar { display: inline-block; margin-top: .75rem; font-family: 'IBM Plex Sans', sans-serif; font-size: .88rem; font-weight: 500; padding: .6rem 1.6rem; background: transparent; color: var(--ink); border: 2px solid var(--ink); border-radius: 6px; cursor: pointer; }
+
+  @media (max-width: 520px) {
+    header { padding: 1.5rem 1rem 1.2rem; }
+    main { padding: 1rem 1rem 3rem; }
+    #gabarito { padding: 0 1rem 3rem; }
+    .btn { font-size: .82rem; padding: .6rem 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <p class="eyebrow">DatavenIA — Jurisprudências</p>
+    <h1>Simulado · Semana 2</h1>
+    <div class="header-meta">
+      <span>20 questões</span>
+      <span>STJ · STF · 2026</span>
+      <span>Verdadeiro ou Falso</span>
+    </div>
+  </div>
+</header>
+
+<div id="progress-wrap">
+  <span id="progress-label">0 / 20</span>
+  <div id="progress-bar-bg"><div id="progress-bar-fill"></div></div>
+</div>
+
+<main id="quiz-main">
+
+  <div id="intro">
+    <h2>Pronto para testar seus julgados?</h2>
+    <p>20 questões baseadas nos julgados da Semana 2 do DatavenIA. Marque Verdadeiro ou Falso e avance. O gabarito completo só aparece ao final.</p>
+    <button class="btn-start" onclick="startQuiz()">Iniciar simulado →</button>
+  </div>
+
+  <!-- Q1 — VERDADEIRO (Constitucional) -->
+  <div class="card" id="card-1">
+    <div class="card-head"><span class="q-number">Q 01</span><span class="materia-tag">Constitucional</span></div>
+    <div class="card-body">
+      <p class="affirmation">É inconstitucional norma regimental de Tribunal de Justiça que restringe a utilização do agravo interno contra decisões monocráticas do relator, por invasão da competência privativa da União para legislar sobre direito processual (art. 22, I, CF).</p>
+      <div class="btn-row">
+        <button class="btn btn-true" onclick="answer(1,true,true)">✓ Verdadeiro</button>
+        <button class="btn btn-false" onclick="answer(1,false,true)">✗ Falso</button>
+      </div>
+      <div class="feedback" id="fb-1">
+        <div class="feedback-verdict"><span class="feedback-icon"></span><span class="verdict-text"></span></div>
+        <div class="feedback-tese">Certo. O STF declarou que regimentos internos de tribunais não podem criar obstáculos recursais além dos previstos no CPC. O art. 1.021 do CPC garante agravo interno contra qualquer decisão singular, e norma regimental que restrinja esse direito invade competência legislativa da União e viola a ampla defesa (art. 5º, LV, CF).</div>
+        <div class="feedback-fonte">STF · ADI 7.692/MA · Plenário · Rel. Min. Flávio Dino · 16/03/2026</div>
+      </div>
+      <button class="btn btn-nav" id="nav-1" style="display:none" onclick="nextCard(1)">Próxima questão →</button>
+    </div>
+  </div>
+
+  <!-- Q2 — FALSO (Constitucional) -->
+  <div class="card" id="card-2">
+    <div class="card-head"><span class="q-number">Q 02</span><span class="materia-tag">Constitucional</span></div>
+    <div class="card-body">
+      <p class="affirmation">No julgamento da ADPF 973, o STF declarou o estado de coisas inconstitucional quanto à situação da população negra no Brasil, reconhecendo o racismo institucional como política de Estado.</p>
+      <div class="btn-row">
+        <button class="btn btn-true" onclick="answer(2,true,false)">✓ Verdadeiro</button>
+        <button class="btn btn-false" onclick="answer(2,false,false)">✗ Falso</button>
+      </div>
+      <div class="feedback" id="fb-2">
+        <div class="feedback-verdict"><span class="feedback-icon"></span><span class="verdict-text"></span></div>
+        <div class="feedback-tese">Falso. O STF reconheceu o racismo estrutural como fenômeno histórico e institucional, mas <strong>afastou a declaração de estado de coisas inconstitucional</strong>. Diante da existência de políticas públicas vigentes (PLANAPIR), optou pelo diálogo interinstitucional e determinou a revisão do plano com metas concretas.</div>
+        <div class="feedback-fonte">STF · ADPF 973/DF · Plenário · Rel. Min. Luiz Fux · Maio/2026</div>
+      </div>
+      <button class="btn btn-nav" id="nav-2" style="display:none" onclick="nextCard(2)">Próxima questão →</button>
+    </div>
+  </div>
+
+  <!-- Q3 — VERDADEIRO (Constitucional) -->
+  <div class="card" id="card-3">
+    <div class="card-head"><span class="q-number">Q 03</span><span class="materia-tag">Constitucional</span></div>
+    <div class="card-body">
+      <p class="affirmation">É inconstitucional lei estadual que estabelece ajuda de custo para curso de formação policial em valor inferior ao patamar mínimo de 50% da remuneração inicial fixado pela Lei Orgânica Nacional das Polícias Civis, por vício formal de invasão da competência da União para editar normas gerais.</p>
+      <div class="btn-row">
+        <button class="btn btn-true" onclick="answer(3,true,true)">✓ Verdadeiro</button>
+        <button class="btn btn-false" onclick="answer(3,false,true)">✗ Falso</button>
+      </div>
+      <div class="feedback" id="fb-3">
+        <div class="feedback-verdict"><span class="feedback-icon"></span><span class="verdict-text"></span></div>
+        <div class="feedback-tese">Certo. O STF declarou inconstitucional lei estadual que fixava a bolsa-auxílio para delegado em apenas 23,77% da remuneração inicial. A Lei nº 14.735/2023 (LONPC) exige o piso de 50%, e os Estados não podem contrariar essa norma geral, sob pena de invasão da competência legislativa da União (art. 24, XVI, CF).</div>
+        <div class="feedback-fonte">STF · ADI 7.783/PE · Plenário · Rel. Min. Dias Toffoli · 09/04/2026</div>
+      </div>
+      <button class="btn btn-nav" id="nav-3" style="display:none" onclick="nextCard(3)">Próxima questão →</button>
+    </div>
+  </div>
+
+  <!-- Q4 — FALSO (Constitucional) -->
+  <div class="card" id="card-4">
+    <div class="card-head"><span class="q-number">Q 04</span><span class="materia-tag">Constitucional</span></div>
+    <div class="card-body">
+      <p class="affirmation">Conforme entendimento do STF, os Tribunais de Contas dos Municípios, por serem órgãos independentes criados pelos Estados, devem prestar suas contas anuais diretamente à Assembleia Legislativa estadual.</p>
+      <div class="btn-row">
+        <button class="btn btn-true" onclick="answer(4,true,false)">✓ Verdadeiro</button>
+        <button class="btn btn-false" onclick="answer(4,false,false)">✗ Falso</button>
+      </div>
+      <div class="feedback" id="fb-4">
+        <div class="feedback-verdict"><span class="feedback-icon"></span><span class="verdict-text"></span></div>
+        <div class="feedback-tese">Falso. O STF decidiu que as contas do TCM devem ser julgadas pelo <strong>Tribunal de Contas do Estado (TCE)</strong>, por simetria ao modelo federal (art. 71, II, CF). É inconstitucional atribuir essa competência à Assembleia Legislativa. O envio de relatórios de atividades ao Legislativo é permitido, mas não o julgamento de contas.</div>
+        <div class="feedback-fonte">STF · ADI 4.124/BA · Plenário · Rel. Min. Nunes Marques · 16/12/2025</div>
+      </div>
+      <button class="btn btn-nav" id="nav-4" style="display:none" onclick="nextCard(4)">Próxima questão →</button>
+    </div>
+  </div>
+
+  <!-- Q5 — FALSO (Penal) -->
+  <div class="card" id="card-5">
+    <div class="card-head"><span class="q-number">Q 05</span><span class="materia-tag">Dir. Penal</span></div>
+    <div class="card-body">
+      <p class="affirmation">A lavratura de auto de infração administrativo de trânsito constitui condição de procedibilidade indispensável para a deflagração de ação penal pelo crime de embriaguez ao volante (art. 306 do CTB), de modo que sua nulidade impede o reconhecimento da materialidade delitiva.</p>
+      <div class="btn-row">
+        <button class="btn btn-true" onclick="answer(5,true,false)">✓ Verdadeiro</button>
+        <button class="btn btn-false" onclick="answer(5,false,false)">✗ Falso</button>
+      </div>
+      <div class="feedback" id="fb-5">
+        <div class="feedback-verdict"><span class="feedback-icon"></span><span class="verdict-text"></span></div>
+        <div class="feedback-tese">Falso. O STJ fixou que <strong>a lavratura de auto de infração não é condição de procedibilidade</strong> para a ação penal por embriaguez ao volante. As instâncias são independentes e a materialidade pode ser provada por vídeo, testemunhos ou exame clínico.</div>
+        <div class="feedback-fonte">STJ · AREsp 2.943.421/BA · 5ª Turma · Rel. Min. Maria Marluce Caldas · 07/04/2026</div>
+      </div>
+      <button class="btn btn-nav" id="nav-5" style="display:none" onclick="nextCard(5)">Próxima questão →</button>
+    </div>
+  </div>
+
+  <!-- Q6 — VERDADEIRO (Penal) -->
+  <div class="card" id="card-6">
+    <div class="card-head"><span class="q-number">Q 06</span><span class="materia-tag">Dir. Penal</span></div>
+    <div class="card-body">
+      <p class="affirmation">O Superior Tribunal de Justiça admite, de maneira excepcional, a flexibilização do interstício temporal máximo de 30 dias entre as condutas criminosas para fins de reconhecimento da continuidade delitiva, considerando as peculiaridades do caso concreto, como a existência de projeto criminoso único.</p>
+      <div class="btn-row">
+        <button class="btn btn-true" onclick="answer(6,true,true)">✓ Verdadeiro</button>
+        <button class="btn btn-false" onclick="answer(6,false,true)">✗ Falso</button>
+      </div>
+      <div class="feedback" id="fb-6">
+        <div class="feedback-verdict"><span class="feedback-icon"></span><span class="verdict-text"></span></div>
+        <div class="feedback-tese">Certo. O prazo de 30 dias é parâmetro jurisprudencial, não legal, e pode ser superado quando demonstrado um projeto criminoso único e modus operandi similar. O STJ reafirmou esse entendimento em caso envolvendo 47 condutas de contrabando com intervalos superiores a 30 dias entre ciclos de crimes.</div>
+        <div class="feedback-fonte">STJ · REsp 2.194.002/MS · 6ª Turma · Rel. Min. Sebastião Reis Júnior · 25/02/2026</div>
+      </div>
+      <button class="btn btn-nav" id="nav-6" style="display:none" onclick="nextCard(6)">Próxima questão →</button>
+    </div>
+  </div>
+
+  <!-- Q7 — VERDADEIRO (Penal) -->
+  <div class="card" id="card-7">
+    <div class="card-head"><span class="q-number">Q 07</span><span class="materia-tag">Dir. Penal</span></div>
+    <div class="card-body">
+      <p class="affirmation">Em crime militar que deixa vestígios, a incidência da causa de aumento prevista no § 3º do art. 157 do CPM (lesão corporal) exige a comprovação por exame de corpo de delito, sendo a prova testemunhal ou visual admitida apenas quando houver justificativa idônea para a impossibilidade de sua realização.</p>
+      <div class="btn-row">
+        <button class="btn btn-true" onclick="answer(7,true,true)">✓ Verdadeiro</button>
+        <button class="btn btn-false" onclick="answer(7,false,true)">✗ Falso</button>
+      </div>
+      <div class="feedback" id="fb-7">
+        <div class="feedback-verdict"><span class="feedback-icon"></span><span class="verdict-text"></span></div>
+        <div class="feedback-tese">Certo. O STJ afastou a causa de aumento de pena por lesão corporal em crime militar por falta de laudo técnico. A perícia é a regra indispensável para infrações com vestígios; o uso de provas visuais é condicionado à demonstração concreta de que o exame pericial não pôde ser realizado.</div>
+        <div class="feedback-fonte">STJ · AREsp 3.046.912/RS · 5ª Turma · Rel. Min. Ribeiro Dantas · 08/04/2026</div>
+      </div>
+      <button class="btn btn-nav" id="nav-7" style="display:none" onclick="nextCard(7)">Próxima questão →</button>
+    </div>
+  </div>
+
+  <!-- Q8 — FALSO (Penal) -->
+  <div class="card" id="card-8">
+    <div class="card-head"><span class="q-number">Q 08</span><span class="materia-tag">Dir. Penal</span></div>
+    <div class="card-body">
+      <p class="affirmation">Conforme entendimento atual do Superior Tribunal de Justiça, a fuga do indivíduo para o interior de sua residência ao avistar policiais em patrulhamento de rotina não constitui, por si só, elemento suficiente para autorizar o ingresso forçado no domicílio sem mandado judicial.</p>
+      <div class="btn-row">
+        <button class="btn btn-true" onclick="answer(8,true,false)">✓ Verdadeiro</button>
+        <button class="btn btn-false" onclick="answer(8,false,false)">✗ Falso</button>
+      </div>
+      <div class="feedback" id="fb-8">
+        <div class="feedback-verdict"><span class="feedback-icon"></span><span class="verdict-text"></span></div>
+        <div class="feedback-tese">Falso. A afirmativa descreve o <strong>entendimento antigo do STJ, que foi expressamente superado</strong> para se alinhar ao STF (Tema 280). O STJ passou a reconhecer que a fuga do suspeito para o interior da residência ao avistar policiais configura justa causa (fundadas razões) para ingresso domiciliar sem mandado.</div>
+        <div class="feedback-fonte">STJ · AgRg no HC 1.035.519/SP · 6ª Turma · Rel. Min. Rogerio Schietti Cruz · 26/02/2026</div>
+      </div>
+      <button class="btn btn-nav" id="nav-8" style="display:none" onclick="nextCard(8)">Próxima questão →</button>
+    </div>
+  </div>
+
+  <!-- Q9 — FALSO (Penal) -->
+  <div class="card" id="card-9">
+    <div class="card-head"><span class="q-number">Q 09</span><span class="materia-tag">Dir. Penal</span></div>
+    <div class="card-body">
+      <p class="affirmation">Em ação penal por crime contra a ordem tributária, a insuficiência probatória do contribuinte na esfera fiscal — como a incapacidade de afastar a presunção de inidoneidade das notas fiscais — é suficiente, por si só, para demonstrar a materialidade delitiva no juízo criminal.</p>
+      <div class="btn-row">
+        <button class="btn btn-true" onclick="answer(9,true,false)">✓ Verdadeiro</button>
+        <button class="btn btn-false" onclick="answer(9,false,false)">✗ Falso</button>
+      </div>
+      <div class="feedback" id="fb-9">
+        <div class="feedback-verdict"><span class="feedback-icon"></span><span class="verdict-text"></span></div>
+        <div class="feedback-tese">Falso. O STJ veda a transposição automática da presunção administrativa para o juízo penal. A insuficiência probatória no Fisco é <strong>"penalmente neutra"</strong>. O ônus da prova na ação penal é integral da acusação, que deve provar fatos positivos da fraude — não pode aproveitar a falha documental do réu na esfera fiscal.</div>
+        <div class="feedback-fonte">STJ · AREsp 3.111.920/SC · 5ª Turma · Rel. Min. Ribeiro Dantas · 03/03/2026</div>
+      </div>
+      <button class="btn btn-nav" id="nav-9" style="display:none" onclick="nextCard(9)">Próxima questão →</button>
+    </div>
+  </div>
+
+  <!-- Q10 — VERDADEIRO (Administrativo) -->
+  <div class="card" id="card-10">
+    <div class="card-head"><span class="q-number">Q 10</span><span class="materia-tag">Dir. Administrativo</span></div>
+    <div class="card-body">
+      <p class="affirmation">Conforme o entendimento atual do STJ, a prática de tortura por agentes estatais não pode ser tipificada como ato de improbidade administrativa previsto no art. 11 da Lei n. 8.429/1992, ante a taxatividade do referido dispositivo após a Lei n. 14.230/2021.</p>
+      <div class="btn-row">
+        <button class="btn btn-true" onclick="answer(10,true,true)">✓ Verdadeiro</button>
+        <button class="btn btn-false" onclick="answer(10,false,true)">✗ Falso</button>
+      </div>
+      <div class="feedback" id="fb-10">
+        <div class="feedback-verdict"><span class="feedback-icon"></span><span class="verdict-text"></span></div>
+        <div class="feedback-tese">Certo. Com o advento da Lei n. 14.230/2021, o rol do art. 11 da LIA passou a ser taxativo (numerus clausus) e não contempla a conduta de tortura. Os agentes continuam sujeitos à responsabilização penal e administrativa disciplinar, mas não por improbidade administrativa.</div>
+        <div class="feedback-fonte">STJ · REsp 2.232.623/AL · 1ª Turma · Rel. Min. Regina Helena Costa · 03/02/2026</div>
+      </div>
+      <button class="btn btn-nav" id="nav-10" style="display:none" onclick="nextCard(10)">Próxima questão →</button>
+    </div>
+  </div>
+
+  <!-- Q11 — FALSO (Administrativo) -->
+  <div class="card" id="card-11">
+    <div class="card-head"><span class="q-number">Q 11</span><span class="materia-tag">Dir. Administrativo</span></div>
+    <div class="card-body">
+      <p class="affirmation">No âmbito do poder de polícia ambiental, o IBAMA possui competência discricionária para restringir, mediante portaria, a contratação de guias de turismo dentro de Unidades de Proteção Integral, visando à proteção do ecossistema e à segurança dos visitantes.</p>
+      <div class="btn-row">
+        <button class="btn btn-true" onclick="answer(11,true,false)">✓ Verdadeiro</button>
+        <button class="btn btn-false" onclick="answer(11,false,false)">✗ Falso</button>
+      </div>
+      <div class="feedback" id="fb-11">
+        <div class="feedback-verdict"><span class="feedback-icon"></span><span class="verdict-text"></span></div>
+        <div class="feedback-tese">Falso. O STJ decidiu que tal restrição extrapola o poder regulamentar e configura <strong>desvio de poder</strong>. Não há autorização na Lei do SNUC (Lei 9.985/2000) para o IBAMA limitar o exercício profissional de guias por ato administrativo. Ademais, a competência para gerir parques nacionais é do ICMBio, não do IBAMA.</div>
+        <div class="feedback-fonte">STJ · REsp 1.868.522/PR · 1ª Turma · Rel. Min. Paulo Sérgio Domingues · 10/03/2026</div>
+      </div>
+      <button class="btn btn-nav" id="nav-11" style="display:none" onclick="nextCard(11)">Próxima questão →</button>
+    </div>
+  </div>
+
+  <!-- Q12 — VERDADEIRO (Administrativo) -->
+  <div class="card" id="card-12">
+    <div class="card-head"><span class="q-number">Q 12</span><span class="materia-tag">Dir. Administrativo</span></div>
+    <div class="card-body">
+      <p class="affirmation">Segundo o Tema 1.408 do STJ, o sindicato não possui legítimo interesse para propor ação civil pública buscando a condenação da União ao pagamento de diferenças de complementação do FUNDEB, pois tal matéria é de relacionamento institucional entre entes federados.</p>
+      <div class="btn-row">
+        <button class="btn btn-true" onclick="answer(12,true,true)">✓ Verdadeiro</button>
+        <button class="btn btn-false" onclick="answer(12,false,true)">✗ Falso</button>
+      </div>
+      <div class="feedback" id="fb-12">
+        <div class="feedback-verdict"><span class="feedback-icon"></span><span class="verdict-text"></span></div>
+        <div class="feedback-tese">Certo. O sindicato pode defender direitos da categoria (como o percentual de 60% do FUNDEB aplicado em salários), mas não pode substituir os entes públicos na cobrança da "receita bruta" do Fundo perante a União. Somente Municípios e Estados têm legitimidade para essa demanda.</div>
+        <div class="feedback-fonte">STJ · REsp 2.228.331/DF · 1ª Seção (Tema 1.408) · Rel. Min. Maria Thereza · 07/05/2026</div>
+      </div>
+      <button class="btn btn-nav" id="nav-12" style="display:none" onclick="nextCard(12)">Próxima questão →</button>
+    </div>
+  </div>
+
+  <!-- Q13 — VERDADEIRO (Administrativo) -->
+  <div class="card" id="card-13">
+    <div class="card-head"><span class="q-number">Q 13</span><span class="materia-tag">Dir. Administrativo</span></div>
+    <div class="card-body">
+      <p class="affirmation">O desconto dos dias de greve é incabível quando restar demonstrado que a paralisação foi provocada por conduta ilícita do Poder Público, como a omissão injustificada na regulamentação de direitos remuneratórios previamente pactuados.</p>
+      <div class="btn-row">
+        <button class="btn btn-true" onclick="answer(13,true,true)">✓ Verdadeiro</button>
+        <button class="btn btn-false" onclick="answer(13,false,true)">✗ Falso</button>
+      </div>
+      <div class="feedback" id="fb-13">
+        <div class="feedback-verdict"><span class="feedback-icon"></span><span class="verdict-text"></span></div>
+        <div class="feedback-tese">Certo. O STJ aplicou a exceção do Tema 531/STF e afastou o desconto dos Auditores Fiscais da Receita Federal que paralisaram em razão de omissão ilícita da União — quase 7 anos sem regulamentar o Bônus de Eficiência previsto em lei. A Administração não pode punir financeiramente o servidor por greve que ela mesma causou.</div>
+        <div class="feedback-fonte">STJ · Pet 16.334/DF · 1ª Seção · Rel. Min. Regina Helena Costa · 07/05/2026</div>
+      </div>
+      <button class="btn btn-nav" id="nav-13" style="display:none" onclick="nextCard(13)">Próxima questão →</button>
+    </div>
+  </div>
+
+  <!-- Q14 — FALSO (Administrativo) -->
+  <div class="card" id="card-14">
+    <div class="card-head"><span class="q-number">Q 14</span><span class="materia-tag">Dir. Administrativo</span></div>
+    <div class="card-body">
+      <p class="affirmation">Em concurso público federal, a administração pode legitimamente restringir a reserva de vagas para candidatos negros às especialidades que ofereçam, individualmente, três ou mais vagas no edital, sem que isso configure burla à política de cotas.</p>
+      <div class="btn-row">
+        <button class="btn btn-true" onclick="answer(14,true,false)">✓ Verdadeiro</button>
+        <button class="btn btn-false" onclick="answer(14,false,false)">✗ Falso</button>
+      </div>
+      <div class="feedback" id="fb-14">
+        <div class="feedback-verdict"><span class="feedback-icon"></span><span class="verdict-text"></span></div>
+        <div class="feedback-tese">Falso. O STJ decidiu que o percentual de 20% deve incidir sobre o <strong>total de vagas do cargo</strong> no certame. É vedado o fracionamento por especialidade para afastar a política de cotas — o STJ reconheceu essa estratégia como criação de "micro-concursos" para esvaziar a Lei n. 12.990/2014.</div>
+        <div class="feedback-fonte">STJ · MS 31.562/DF · 1ª Seção · Rel. Min. Benedito Gonçalves · 04/12/2025</div>
+      </div>
+      <button class="btn btn-nav" id="nav-14" style="display:none" onclick="nextCard(14)">Próxima questão →</button>
+    </div>
+  </div>
+
+  <!-- Q15 — VERDADEIRO (Civil) -->
+  <div class="card" id="card-15">
+    <div class="card-head"><span class="q-number">Q 15</span><span class="materia-tag">Dir. Civil</span></div>
+    <div class="card-body">
+      <p class="affirmation">Em casos de circulação massiva de conteúdos ilícitos graves envolvendo crianças e adolescentes, a indicação de URLs de hashtags é suficiente para a remoção de conteúdo, sendo dispensada a listagem individualizada de cada postagem, prevalecendo o princípio da proteção integral do menor.</p>
+      <div class="btn-row">
+        <button class="btn btn-true" onclick="answer(15,true,true)">✓ Verdadeiro</button>
+        <button class="btn btn-false" onclick="answer(15,false,true)">✗ Falso</button>
+      </div>
+      <div class="feedback" id="fb-15">
+        <div class="feedback-verdict"><span class="feedback-icon"></span><span class="verdict-text"></span></div>
+        <div class="feedback-tese">Certo. O STJ flexibilizou a exigência do Marco Civil da Internet (art. 19, §1º) e admitiu que a URL de hashtag é suficiente para remoção de conteúdo ilícito em casos de viralização massiva envolvendo crianças e adolescentes. A proteção integral do menor prevalece sobre o formalismo técnico.</div>
+        <div class="feedback-fonte">STJ · REsp 2.239.457/RJ · 3ª Turma · Rel. Min. Nancy Andrighi · 14/04/2026</div>
+      </div>
+      <button class="btn btn-nav" id="nav-15" style="display:none" onclick="nextCard(15)">Próxima questão →</button>
+    </div>
+  </div>
+
+  <!-- Q16 — FALSO (Civil) -->
+  <div class="card" id="card-16">
+    <div class="card-head"><span class="q-number">Q 16</span><span class="materia-tag">Dir. Civil</span></div>
+    <div class="card-body">
+      <p class="affirmation">Configura publicidade enganosa e violação ao dever de informação o anúncio de venda "sem juros" quando o preço parcelado é exatamente igual ao valor à vista, presumindo-se a existência de encargos financeiros embutidos no preço.</p>
+      <div class="btn-row">
+        <button class="btn btn-true" onclick="answer(16,true,false)">✓ Verdadeiro</button>
+        <button class="btn btn-false" onclick="answer(16,false,false)">✗ Falso</button>
+      </div>
+      <div class="feedback" id="fb-16">
+        <div class="feedback-verdict"><span class="feedback-icon"></span><span class="verdict-text"></span></div>
+        <div class="feedback-tese">Falso. O STJ decidiu que a ausência de diferenciação de preços <strong>não configura publicidade enganosa</strong>. O fornecedor tem liberdade de precificação e pode manter o mesmo preço para à vista e a prazo. A prática só seria abusiva com prova concreta de cobrança oculta de encargos financeiros.</div>
+        <div class="feedback-fonte">STJ · REsp 1.876.423/SP · 4ª Turma · Rel. Min. Marco Buzzi · 03/02/2026</div>
+      </div>
+      <button class="btn btn-nav" id="nav-16" style="display:none" onclick="nextCard(16)">Próxima questão →</button>
+    </div>
+  </div>
+
+  <!-- Q17 — VERDADEIRO (Civil) -->
+  <div class="card" id="card-17">
+    <div class="card-head"><span class="q-number">Q 17</span><span class="materia-tag">Dir. Civil</span></div>
+    <div class="card-body">
+      <p class="affirmation">A disponibilização de obras musicais em plataformas de streaming sem a devida atribuição de autoria gera dano moral in re ipsa ao compositor, sendo dispensada a demonstração efetiva do abalo psíquico sofrido.</p>
+      <div class="btn-row">
+        <button class="btn btn-true" onclick="answer(17,true,true)">✓ Verdadeiro</button>
+        <button class="btn btn-false" onclick="answer(17,false,true)">✗ Falso</button>
+      </div>
+      <div class="feedback" id="fb-17">
+        <div class="feedback-verdict"><span class="feedback-icon"></span><span class="verdict-text"></span></div>
+        <div class="feedback-tese">Certo. A exploração econômica de obras sem atribuição de autoria viola direitos morais personalíssimos (art. 24, II, da Lei 9.610/98) e gera dano moral presumido (in re ipsa), independentemente de prova de sofrimento. Alegações de inviabilidade técnica da plataforma não afastam o dever de cuidado e de indenizar.</div>
+        <div class="feedback-fonte">STJ · AREsp 3.064.192/RS · 4ª Turma · Rel. Min. João Otávio de Noronha · 02/03/2026</div>
+      </div>
+      <button class="btn btn-nav" id="nav-17" style="display:none" onclick="nextCard(17)">Próxima questão →</button>
+    </div>
+  </div>
+
+  <!-- Q18 — FALSO (Processual Civil) -->
+  <div class="card" id="card-18">
+    <div class="card-head"><span class="q-number">Q 18</span><span class="materia-tag">Processual Civil</span></div>
+    <div class="card-body">
+      <p class="affirmation">Nos termos do Tema 1.296 do STJ, a validade da multa cominatória em obrigação de fazer depende da intimação pessoal do devedor, mantendo-se a exigência da Súmula 410/STJ mesmo após a entrada em vigor do CPC/2015.</p>
+      <div class="btn-row">
+        <button class="btn btn-true" onclick="answer(18,true,false)">✓ Verdadeiro</button>
+        <button class="btn btn-false" onclick="answer(18,false,false)">✗ Falso</button>
+      </div>
+      <div class="feedback" id="fb-18">
+        <div class="feedback-verdict"><span class="feedback-icon"></span><span class="verdict-text"></span></div>
+        <div class="feedback-tese">Falso. O STJ <strong>superou a Súmula 410</strong> no Tema 1.296 e fixou que a intimação via advogado pelo Diário da Justiça é suficiente para a incidência da multa cominatória. A exigência de intimação pessoal foi considerada formalismo excessivo incompatível com a sistemática do CPC/2015 (art. 513, §2º, I).</div>
+        <div class="feedback-fonte">STJ · REsp 2.096.505/SP · Corte Especial (Tema 1.296) · Rel. p/ Ac. Min. Luis Felipe Salomão · 04/03/2026</div>
+      </div>
+      <button class="btn btn-nav" id="nav-18" style="display:none" onclick="nextCard(18)">Próxima questão →</button>
+    </div>
+  </div>
+
+  <!-- Q19 — VERDADEIRO (Processual Civil) -->
+  <div class="card" id="card-19">
+    <div class="card-head"><span class="q-number">Q 19</span><span class="materia-tag">Processual Civil</span></div>
+    <div class="card-body">
+      <p class="affirmation">Segundo o Tema 1.299 do STJ, aplica-se o óbice da Súmula 343/STF às ações rescisórias que visem desconstituir decisões proferidas quando a matéria era controvertida nos tribunais, sendo o marco temporal relevante a data do julgamento da decisão rescindenda, e não o seu trânsito em julgado.</p>
+      <div class="btn-row">
+        <button class="btn btn-true" onclick="answer(19,true,true)">✓ Verdadeiro</button>
+        <button class="btn btn-false" onclick="answer(19,false,true)">✗ Falso</button>
+      </div>
+      <div class="feedback" id="fb-19">
+        <div class="feedback-verdict"><span class="feedback-icon"></span><span class="verdict-text"></span></div>
+        <div class="feedback-tese">Certo. O STJ fixou que a ação rescisória não serve como instrumento para adequar julgados antigos a nova orientação firmada em recurso repetitivo posterior, se na época da decisão rescindenda a matéria era controvertida. O marco é a data do julgamento, e a imutabilidade da coisa julgada prevalece.</div>
+        <div class="feedback-fonte">STJ · EREsp 1.431.163/AL · 1ª Seção (Tema 1.299) · Rel. Min. Regina Helena Costa · 11/03/2026</div>
+      </div>
+      <button class="btn btn-nav" id="nav-19" style="display:none" onclick="nextCard(19)">Próxima questão →</button>
+    </div>
+  </div>
+
+  <!-- Q20 — FALSO (Processual Civil) -->
+  <div class="card" id="card-20">
+    <div class="card-head"><span class="q-number">Q 20</span><span class="materia-tag">Processual Civil</span></div>
+    <div class="card-body">
+      <p class="affirmation">Em sede de ação civil pública ambiental, as astreintes fixadas contra ente público possuem caráter meramente indenizatório, não sendo admissível sua utilização com natureza inibitória para prevenção de danos futuros.</p>
+      <div class="btn-row">
+        <button class="btn btn-true" onclick="answer(20,true,false)">✓ Verdadeiro</button>
+        <button class="btn btn-false" onclick="answer(20,false,false)">✗ Falso</button>
+      </div>
+      <div class="feedback" id="fb-20">
+        <div class="feedback-verdict"><span class="feedback-icon"></span><span class="verdict-text"></span></div>
+        <div class="feedback-tese">Falso. O STJ reafirmou que a tutela nas ações coletivas ambientais pode e deve ter <strong>natureza inibitória e preventiva</strong>. A multa diária é meio legítimo para assegurar que a administração pública observe as normas de proteção ambiental, conforme o art. 11 da Lei n. 7.347/1985 (Lei da ACP).</div>
+        <div class="feedback-fonte">STJ · REsp 2.195.999/ES · 2ª Turma · Rel. Min. Maria Thereza de Assis Moura · 15/04/2026</div>
+      </div>
+      <button class="btn btn-nav" id="nav-20" style="display:none" onclick="showScore()">Ver resultado →</button>
+    </div>
+  </div>
+
+</main>
+
+<!-- SCORE -->
+<div id="score-screen">
+  <div class="score-circle" id="score-display">—</div>
+  <h2 class="score-title" id="score-title">Resultado</h2>
+  <p class="score-sub" id="score-sub">Calculando…</p>
+  <button class="btn-gabarito" onclick="showGabarito()">Ver gabarito completo →</button><br>
+  <button class="btn-reiniciar" onclick="restartQuiz()">↺ Refazer simulado</button>
+</div>
+
+<!-- GABARITO -->
+<div id="gabarito"></div>
+
+<script>
+  const TOTAL = 20;
+
+  // true = afirmativa é VERDADEIRA, false = afirmativa é FALSA
+  // Distribuição: 10V / 10F
+  // V: Q1,Q3,Q6,Q7,Q10,Q12,Q13,Q15,Q17,Q19
+  // F: Q2,Q4,Q5,Q8,Q9,Q11,Q14,Q16,Q18,Q20
+  const GABARITO_CORRETO = [null,true,false,true,false,false,true,true,false,false,true,false,true,true,false,true,false,true,false,true,false];
+
+  const AFIRMACOES = [
+    null,
+    "É inconstitucional norma regimental de TJ que restringe o agravo interno contra decisões monocráticas do relator, por invasão da competência privativa da União para legislar sobre direito processual (art. 22, I, CF).",
+    "No julgamento da ADPF 973, o STF declarou o estado de coisas inconstitucional quanto à situação da população negra no Brasil.",
+    "É inconstitucional lei estadual que fixa bolsa-auxílio para formação policial abaixo de 50% da remuneração inicial, por vício formal de invasão da competência da União para editar normas gerais.",
+    "Os TCMs devem prestar suas contas anuais diretamente à Assembleia Legislativa estadual.",
+    "A lavratura de auto de infração de trânsito constitui condição de procedibilidade indispensável para a ação penal por embriaguez ao volante (art. 306 CTB).",
+    "O STJ admite, excepcionalmente, a flexibilização do interstício de 30 dias entre condutas criminosas para o crime continuado, quando demonstrado projeto criminoso único.",
+    "Em crime militar com vestígios, a causa de aumento por lesão corporal (art. 157, §3º, CPM) exige exame de corpo de delito, sendo a prova visual admitida apenas com justificativa idônea para a impossibilidade da perícia.",
+    "Conforme entendimento atual do STJ, a fuga para o interior da residência ao avistar policiais não constitui, por si só, justa causa para ingresso domiciliar sem mandado.",
+    "A insuficiência probatória do contribuinte na esfera fiscal é suficiente, por si só, para demonstrar a materialidade do crime tributário no juízo criminal.",
+    "A prática de tortura por agentes estatais não pode ser tipificada como improbidade administrativa pelo art. 11 da LIA, ante a taxatividade do dispositivo após a Lei n. 14.230/2021.",
+    "O IBAMA possui competência discricionária para restringir, por portaria, a contratação de guias de turismo dentro de Unidades de Proteção Integral.",
+    "Segundo o Tema 1.408 do STJ, o sindicato não possui legítimo interesse para propor ACP cobrando diferenças de complementação do FUNDEB da União.",
+    "O desconto dos dias de greve é incabível quando a paralisação foi provocada por conduta ilícita do Poder Público, como a omissão na regulamentação de direitos remuneratórios pactuados.",
+    "A administração pode restringir a reserva de cotas raciais às especialidades que ofereçam individualmente três ou mais vagas no edital, sem configurar burla à política de ações afirmativas.",
+    "Em casos de circulação massiva de conteúdos ilícitos graves contra menores, a URL de hashtag é suficiente para a remoção de conteúdo, dispensando a listagem individualizada de cada postagem.",
+    "Configura publicidade enganosa anunciar venda 'sem juros' quando o preço parcelado é igual ao valor à vista, presumindo-se encargos financeiros embutidos no preço.",
+    "A disponibilização de obras musicais em streaming sem atribuição de autoria gera dano moral in re ipsa ao compositor, dispensando prova do abalo psíquico.",
+    "A validade da multa cominatória depende da intimação pessoal do devedor, mantendo-se a Súmula 410/STJ mesmo após o CPC/2015 (Tema 1.296).",
+    "Pelo Tema 1.299 do STJ, a Súmula 343/STF incide sobre rescisórias de decisões proferidas quando a matéria era controvertida, sendo o marco temporal a data do julgamento (não do trânsito em julgado).",
+    "Em ACP ambiental, as astreintes contra ente público têm caráter meramente indenizatório, não sendo admissível uso com natureza inibitória.",
+  ];
+
+  const EXPLICACOES = [
+    null,
+    { gabarito:"VERDADEIRO", tese:"Regimentos internos não podem criar obstáculos recursais além dos previstos no CPC. O art. 1.021 do CPC garante agravo interno contra qualquer decisão singular — norma regimental que restrinja esse direito invade competência da União (art. 22, I, CF) e viola a ampla defesa.", fonte:"STF · ADI 7.692/MA · Rel. Min. Flávio Dino · 16/03/2026" },
+    { gabarito:"FALSO", tese:"O STF reconheceu o racismo estrutural, mas afastou a declaração de estado de coisas inconstitucional diante de políticas públicas vigentes (PLANAPIR), optando pelo diálogo interinstitucional e revisão do plano com metas concretas.", fonte:"STF · ADPF 973/DF · Rel. Min. Luiz Fux · Maio/2026" },
+    { gabarito:"VERDADEIRO", tese:"A Lei nº 14.735/2023 (LONPC) exige o piso de 50% da remuneração inicial para a bolsa-auxílio policial. Lei estadual com valor inferior (23,77%) foi declarada inconstitucional por invasão formal da competência da União para editar normas gerais.", fonte:"STF · ADI 7.783/PE · Rel. Min. Dias Toffoli · 09/04/2026" },
+    { gabarito:"FALSO", tese:"As contas do TCM devem ser julgadas pelo TCE, por simetria ao modelo federal (art. 71, II, CF). É inconstitucional atribuir essa competência à Assembleia Legislativa.", fonte:"STF · ADI 4.124/BA · Rel. Min. Nunes Marques · 16/12/2025" },
+    { gabarito:"FALSO", tese:"A lavratura de auto de infração não é condição de procedibilidade da ação penal por embriaguez ao volante. As instâncias são independentes e a materialidade pode ser provada por vídeo, testemunhos ou exame clínico.", fonte:"STJ · AREsp 2.943.421/BA · 5ª T. · Rel. Min. Maria Marluce Caldas · 07/04/2026" },
+    { gabarito:"VERDADEIRO", tese:"O prazo de 30 dias é parâmetro jurisprudencial, não legal, e pode ser superado quando demonstrado projeto criminoso único e modus operandi similar entre as condutas.", fonte:"STJ · REsp 2.194.002/MS · 6ª T. · Rel. Min. Sebastião Reis Júnior · 25/02/2026" },
+    { gabarito:"VERDADEIRO", tese:"A perícia é indispensável para infrações militares com vestígios. Provas visuais só suprem o exame de corpo de delito quando há justificativa idônea para a impossibilidade de sua realização — o princípio do livre convencimento não afasta essa exigência.", fonte:"STJ · AREsp 3.046.912/RS · 5ª T. · Rel. Min. Ribeiro Dantas · 08/04/2026" },
+    { gabarito:"FALSO", tese:"O STJ superou esse entendimento para se alinhar ao STF (Tema 280). A fuga do suspeito para o interior da residência ao avistar policiais configura justa causa (fundadas razões) para ingresso domiciliar sem mandado.", fonte:"STJ · AgRg HC 1.035.519/SP · 6ª T. · Rel. Min. Rogerio Schietti Cruz · 26/02/2026" },
+    { gabarito:"FALSO", tese:"A insuficiência probatória no Fisco é 'penalmente neutra'. O MP deve provar fatos positivos da fraude — não pode aproveitar a falha documental do réu na esfera fiscal para demonstrar materialidade no juízo criminal.", fonte:"STJ · AREsp 3.111.920/SC · 5ª T. · Rel. Min. Ribeiro Dantas · 03/03/2026" },
+    { gabarito:"VERDADEIRO", tese:"Com a Lei n. 14.230/2021, o rol do art. 11 da LIA passou a ser taxativo (numerus clausus) e não contempla a tortura. Os agentes respondem nas esferas penal e disciplinar, mas não por improbidade administrativa.", fonte:"STJ · REsp 2.232.623/AL · 1ª T. · Rel. Min. Regina Helena Costa · 03/02/2026" },
+    { gabarito:"FALSO", tese:"Não há autorização na Lei do SNUC para o IBAMA limitar o exercício profissional de guias por portaria — configura desvio de poder. A competência para gerir parques nacionais é do ICMBio, não do IBAMA.", fonte:"STJ · REsp 1.868.522/PR · 1ª T. · Rel. Min. Paulo Sérgio Domingues · 10/03/2026" },
+    { gabarito:"VERDADEIRO", tese:"O sindicato pode defender direitos da categoria, mas não pode substituir os entes públicos na cobrança de repasses do FUNDEB perante a União. Somente Municípios e Estados lesados têm legitimidade para essa demanda.", fonte:"STJ · REsp 2.228.331/DF · 1ª Seção (T. 1.408) · Rel. Min. Maria Thereza · 07/05/2026" },
+    { gabarito:"VERDADEIRO", tese:"O STJ afastou o desconto dos Auditores Fiscais que paralisaram em razão de omissão ilícita da União na regulamentação do Bônus de Eficiência — quase 7 anos de atraso. A Administração não pode punir financeiramente o servidor por greve que ela mesma causou.", fonte:"STJ · Pet 16.334/DF · 1ª Seção · Rel. Min. Regina Helena Costa · 07/05/2026" },
+    { gabarito:"FALSO", tese:"É vedado o fracionamento por especialidade para afastar a política de cotas. O percentual de 20% incide sobre o total de vagas do cargo no certame. O STJ reconheceu a estratégia como criação de 'micro-concursos' para esvaziar a Lei n. 12.990/2014.", fonte:"STJ · MS 31.562/DF · 1ª Seção · Rel. Min. Benedito Gonçalves · 04/12/2025" },
+    { gabarito:"VERDADEIRO", tese:"O STJ flexibilizou o Marco Civil da Internet: a URL de hashtag é suficiente para remoção massiva de conteúdo ilícito grave contra menores. A proteção integral do menor prevalece sobre o formalismo técnico de indicação de cada URL individual.", fonte:"STJ · REsp 2.239.457/RJ · 3ª T. · Rel. Min. Nancy Andrighi · 14/04/2026" },
+    { gabarito:"FALSO", tese:"Não configura publicidade enganosa. O fornecedor tem liberdade de precificação e pode manter o mesmo preço à vista e a prazo — a prática só seria abusiva com prova concreta de cobrança oculta de encargos financeiros.", fonte:"STJ · REsp 1.876.423/SP · 4ª T. · Rel. Min. Marco Buzzi · 03/02/2026" },
+    { gabarito:"VERDADEIRO", tese:"A exploração econômica de obras sem atribuição de autoria viola direitos morais personalíssimos (art. 24, II, Lei 9.610/98) e gera dano moral in re ipsa, independente de prova de sofrimento. Alegações de inviabilidade técnica não afastam a responsabilidade da plataforma.", fonte:"STJ · AREsp 3.064.192/RS · 4ª T. · Rel. Min. João Otávio de Noronha · 02/03/2026" },
+    { gabarito:"FALSO", tese:"O STJ superou a Súmula 410 no Tema 1.296: a intimação via advogado pelo Diário da Justiça é suficiente para a multa cominatória. A exigência de intimação pessoal é formalismo excessivo incompatível com o CPC/2015.", fonte:"STJ · REsp 2.096.505/SP · Corte Especial (T. 1.296) · Rel. p/ Ac. Min. Salomão · 04/03/2026" },
+    { gabarito:"VERDADEIRO", tese:"A Súmula 343/STF incide se a matéria era controvertida à época do julgamento da decisão rescindenda — e não do trânsito em julgado. É inadmissível rescisória para fazer retroagir entendimento fixado em recurso repetitivo posterior.", fonte:"STJ · EREsp 1.431.163/AL · 1ª Seção (T. 1.299) · Rel. Min. Regina Helena Costa · 11/03/2026" },
+    { gabarito:"FALSO", tese:"A tutela nas ações coletivas ambientais pode ter natureza inibitória e preventiva. As astreintes são meio legítimo para compelir a administração pública a observar normas de proteção ambiental (art. 11 da Lei 7.347/1985).", fonte:"STJ · REsp 2.195.999/ES · 2ª T. · Rel. Min. Maria Thereza de Assis Moura · 15/04/2026" },
+  ];
+
+  // ── STATE ──
+  let answered = new Array(TOTAL + 1).fill(null);
+  let score = 0;
+
+  function updateProgress() {
+    const done = answered.filter(v => v !== null).length;
+    document.getElementById('progress-label').textContent = done + ' / ' + TOTAL;
+    document.getElementById('progress-bar-fill').style.width = (done / TOTAL * 100) + '%';
+  }
+
+  function startQuiz() {
+    document.getElementById('intro').style.display = 'none';
+    nextCard(0);
+  }
+
+  function nextCard(from) {
+    if (from > 0) document.getElementById('card-' + from).classList.remove('active');
+    const next = from + 1;
+    if (next <= TOTAL) {
+      document.getElementById('card-' + next).classList.add('active');
+      document.getElementById('card-' + next).scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
+
+  function answer(q, userAnswer, correctAnswer) {
+    if (answered[q] !== null) return;
+    answered[q] = userAnswer;
+    const isCorrect = (userAnswer === correctAnswer);
+    if (isCorrect) score++;
+
+    const card = document.getElementById('card-' + q);
+    card.querySelectorAll('.btn-true, .btn-false').forEach(b => b.disabled = true);
+    card.querySelector(userAnswer ? '.btn-true' : '.btn-false').classList.add('selected');
+
+    const fb = document.getElementById('fb-' + q);
+    fb.classList.add(isCorrect ? 'correct' : 'wrong');
+    fb.querySelector('.feedback-icon').textContent = isCorrect ? '✓' : '✗';
+    fb.querySelector('.verdict-text').textContent = isCorrect ? 'Correto!' : 'Incorreto';
+
+    document.getElementById('nav-' + q).style.display = 'block';
+    updateProgress();
+  }
+
+  function showScore() {
+    document.getElementById('card-' + TOTAL).classList.remove('active');
+    document.getElementById('quiz-main').style.display = 'none';
+    document.getElementById('progress-wrap').style.display = 'none';
+
+    const pct = Math.round(score / TOTAL * 100);
+    document.getElementById('score-display').textContent = score + '/' + TOTAL;
+    document.getElementById('score-title').textContent =
+      pct >= 80 ? 'Excelente!' : pct >= 60 ? 'Bom desempenho!' : 'Continue praticando!';
+    document.getElementById('score-sub').textContent =
+      pct + '% de acertos · ' + score + ' certas, ' + (TOTAL - score) + ' incorretas';
+
+    document.getElementById('score-screen').classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function showGabarito() {
+    const el = document.getElementById('gabarito');
+    el.innerHTML = '<h2 class="gab-title">Gabarito completo — Semana 2</h2>';
+
+    for (let i = 1; i <= TOTAL; i++) {
+      const userAns = answered[i];
+      const correct = GABARITO_CORRETO[i];
+      let statusClass = 'skip', statusLabel = 'Não respondida';
+      if (userAns !== null) {
+        const ok = (userAns === correct);
+        statusClass = ok ? 'acerto' : 'erro';
+        statusLabel = ok ? 'Acerto' : 'Erro';
+      }
+      const g = EXPLICACOES[i];
+      el.innerHTML += `
+        <div class="gab-item">
+          <div class="gab-head">
+            <span class="gab-num">Q ${String(i).padStart(2,'0')}</span>
+            <span class="gab-status ${statusClass}">${statusLabel}</span>
+          </div>
+          <div class="gab-body">
+            <div class="gab-afirmacao">${AFIRMACOES[i]}</div>
+            <div class="gab-resp-label">Resposta correta</div>
+            <div class="gab-resp"><strong>${g.gabarito}</strong> — ${g.tese}</div>
+            <div class="gab-fonte">${g.fonte}</div>
+          </div>
+        </div>`;
+    }
+
+    el.classList.add('active');
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function restartQuiz() {
+    answered = new Array(TOTAL + 1).fill(null);
+    score = 0;
+
+    document.getElementById('score-screen').classList.remove('active');
+    document.getElementById('gabarito').classList.remove('active');
+    document.getElementById('gabarito').innerHTML = '';
+    document.getElementById('quiz-main').style.display = '';
+    document.getElementById('progress-wrap').style.display = '';
+
+    for (let i = 1; i <= TOTAL; i++) {
+      const card = document.getElementById('card-' + i);
+      card.classList.remove('active');
+      card.querySelectorAll('.btn-true,.btn-false').forEach(b => { b.disabled = false; b.classList.remove('selected'); });
+      document.getElementById('fb-' + i).className = 'feedback';
+      document.getElementById('nav-' + i).style.display = 'none';
+    }
+
+    document.getElementById('intro').style.display = '';
+    updateProgress();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+</script>
+</body>
+</html>
